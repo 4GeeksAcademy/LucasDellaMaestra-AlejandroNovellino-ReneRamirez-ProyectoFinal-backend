@@ -4,9 +4,9 @@ import pandas as pd
 from fastapi import FastAPI, UploadFile, HTTPException
 from pprint import pprint
 
-from src.dtos import FeaturesDto
-from src.utils import preprocess_data, from_dict_to_df
 
+from dtos import FeaturesDto
+from utils import preprocess_data, from_dict_to_df
 
 # load the ML model
 model_path = "models/opt_model.pkl"
