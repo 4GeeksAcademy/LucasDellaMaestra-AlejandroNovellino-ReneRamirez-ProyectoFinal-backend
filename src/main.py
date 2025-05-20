@@ -1,7 +1,16 @@
-import pandas as pd
+import os
 from fastapi import FastAPI, UploadFile, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+
 from src.dtos import FeaturesDto
 from src.wrapper import XGBoostModelWrapper
+
+
+# load environment variables
+load_dotenv()
+cors_url = os.getenv("CORS_URL")
+
 
 # load the ML model
 try:
@@ -14,6 +23,20 @@ except RuntimeError as e:
     raise Exception(f"NoModel cannot be initialized {e}")
 
 app = FastAPI()
+
+
+# CORS middleware configuration
+origins = [
+    cors_url,
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
