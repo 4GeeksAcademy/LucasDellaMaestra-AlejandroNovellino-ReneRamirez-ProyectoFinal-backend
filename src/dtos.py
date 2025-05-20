@@ -37,3 +37,24 @@ class FeaturesDto(BaseModel):
     assigned_room_type: str | None
     deposit_type: str | None
     customer_type: str | None
+
+
+class OnePredictionOutputDto(BaseModel):
+    """
+    Output DTO for one prediction.
+    """
+
+    prediction: int
+    proba_0: float
+    proba_1: float
+
+
+class FilePredictionOutputDto(BaseModel):
+    """
+    Output DTO for the prediction from file.
+    """
+
+    predictions: list[float]
+    # "predictions_proba": predictions_probas.tolist(),
+    total_predictions: int
+    file_name: str

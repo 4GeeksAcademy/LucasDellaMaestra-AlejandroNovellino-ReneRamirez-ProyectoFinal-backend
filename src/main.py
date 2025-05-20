@@ -3,7 +3,7 @@ from fastapi import FastAPI, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from src.dtos import FeaturesDto
+from src.dtos import FeaturesDto, OnePredictionOutputDto, FilePredictionOutputDto
 from src.wrapper import XGBoostModelWrapper
 
 
@@ -45,7 +45,7 @@ def read_root():
 
 
 @app.post("/predict-from-file")
-async def predict_from_file(file: UploadFile):
+async def predict_from_file(file: UploadFile) -> FilePredictionOutputDto:
     """
     Endpoint for doing batch processing of a .csv file.
 
@@ -65,7 +65,7 @@ async def predict_from_file(file: UploadFile):
 
 
 @app.post("/predict")
-def predict(features_dto: FeaturesDto):
+def predict(features_dto: FeaturesDto) -> OnePredictionOutputDto:
     """
     Endpoint for doing one prediction.
 

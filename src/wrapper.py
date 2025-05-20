@@ -3,6 +3,7 @@ Wrapper for the XGBoost model.
 """
 import pickle
 import pandas as pd
+from src.dtos import OnePredictionOutputDto, FilePredictionOutputDto
 
 FEATURES_TO_ENCODE: list[str] = ['hotel', 'arrival_date_month', 'meal', 'country', 'market_segment',
                                  'distribution_channel', 'is_repeated_guest', 'reserved_room_type',
@@ -151,7 +152,7 @@ class XGBoostModelWrapper:
         except Exception:
             raise ValueError(f"Oops, error while doing the prediction.")
 
-    def predict_one(self, data: dict) -> dict:
+    def predict_one(self, data: dict) -> OnePredictionOutputDto:
         """
         Do the predictions for just one set of features.
 
@@ -181,7 +182,7 @@ class XGBoostModelWrapper:
         except Exception:
             raise ValueError(f"Oops, error while doing the prediction.")
 
-    def predict_from_file(self, file) -> dict:
+    def predict_from_file(self, file) -> FilePredictionOutputDto:
         """
         Do the predictions for just one set of features.
 
