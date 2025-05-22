@@ -197,18 +197,68 @@ class XGBoostModelWrapper:
             # transform from dict to df
             df = pd.read_csv(file.file)
 
+            # verify if the file has the client in the columns
+            client_info_df = None
+
+            if 'client' in df.columns:
+                # info of the cliente to save
+                client_info_columns = [
+                    'client', 'country', 'arrival_date_year', 'arrival_date_month', 'arrival_date_day_of_month'
+                ]
+
+                # get the client info
+                client_info_df = df[client_info_columns]
+
+                # crate the date of the reservation
+                client_info_df['reservation_date'] = pd.to_datetime(
+                    client_info_df['arrival_date_year'].astype(str) + '-' +
+                    client_info_df['arrival_date_month'] + '-' +
+                    client_info_df['arrival_date_day_of_month'].astype(str)
+                )
+
+                # drop the columns that are not needed now
+                client_info_df = client_info_df.drop(
+                    ['arrival_date_year', 'arrival_date_month', 'arrival_date_day_of_month'],
+                    axis=1
+                )
+
+                # clean the df
+                df = df.drop(
+                    'client',
+                    axis=1
+                )
+
             # do the predictions
             predictions, predictions_probas = self.predict(df)
 
+            # get the probabilities for the classes
+            predictions_to_return = list(
+                map(
+                    lambda x, y: {'label': x, 'proba_0': y[0], 'proba_1': y[1]},
+                    predictions.tolist(),
+                    predictions_probas.tolist()
+                )
+            )
+
+            # if there were clients, add them to the dataframe
+            if client_info_df is not None:
+                # add the prediction to the client info
+                client_info_df['is_going_to_cancel'] = predictions
+
+                # add the probability predictions to the client info
+                client_info_df['prob_cancel'] = list(map(lambda x: x[1], predictions_probas.tolist()))
+                client_info_df['prob_not_cancel'] = list(map(lambda x: x[0], predictions_probas.tolist()))
+
             # create the output transform
             output: dict = {
-                "predictions": predictions.tolist(),
-                # "predictions_proba": predictions_probas.tolist(),
+                "predictions": predictions_to_return,
+                "client_info": client_info_df.to_dict(orient='records') if client_info_df is not None else None,
                 "total_predictions": len(predictions),
                 "file_name": file.filename
             }
 
             return output
 
-        except Exception:
+        except Exception as e:
+            print(e)
             raise ValueError(f"Oops, error while doing the predictions.")

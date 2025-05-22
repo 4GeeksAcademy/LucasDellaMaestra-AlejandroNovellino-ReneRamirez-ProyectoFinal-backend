@@ -54,7 +54,7 @@ class FilePredictionOutputDto(BaseModel):
     Output DTO for the prediction from file.
     """
 
-    predictions: list[float]
-    # "predictions_proba": predictions_probas.tolist(),
+    predictions: list[dict]
+    client_info: list[dict] | None
     total_predictions: int
     file_name: str
