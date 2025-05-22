@@ -234,7 +234,7 @@ class XGBoostModelWrapper:
             # get the probabilities for the classes
             predictions_to_return = list(
                 map(
-                    lambda x, y: {'label': x, 'proba_0': y[0], 'proba_1': y[1]},
+                    lambda x, y: {'prediction': x, 'proba_0': y[0], 'proba_1': y[1]},
                     predictions.tolist(),
                     predictions_probas.tolist()
                 )
