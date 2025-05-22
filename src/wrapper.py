@@ -172,7 +172,7 @@ class XGBoostModelWrapper:
 
             # create the output transform
             output: dict = {
-                "prediction": pred.tolist(),
+                "prediction": pred.tolist()[0],
                 "proba_0": pred_proba.tolist()[0][0],
                 "proba_1": pred_proba.tolist()[0][1]
             }
