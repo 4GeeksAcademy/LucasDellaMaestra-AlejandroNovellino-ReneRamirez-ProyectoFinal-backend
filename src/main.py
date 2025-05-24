@@ -1,16 +1,15 @@
 import os
 from fastapi import FastAPI, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 
 from src.dtos import FeaturesDto, OnePredictionOutputDto, FilePredictionOutputDto
 from src.wrapper import XGBoostModelWrapper
 
-
 # load environment variables
 load_dotenv()
 cors_url = os.getenv("CORS_URL")
-
 
 # load the ML model
 try:
@@ -23,7 +22,6 @@ except RuntimeError as e:
     raise Exception(f"NoModel cannot be initialized {e}")
 
 app = FastAPI()
-
 
 # CORS middleware configuration
 origins = [
@@ -57,6 +55,26 @@ async def predict_from_file(file: UploadFile) -> FilePredictionOutputDto:
         result = model_wrapper.predict_from_file(file)
 
         return result
+    except:
+        raise HTTPException(
+            status_code=500,
+            detail="Error doing the prediction."
+        )
+
+
+@app.post("/predict-from-file/get-file")
+async def predict_from_file_return_file(file: UploadFile) -> FileResponse:
+    """
+    Endpoint for doing batch processing of a .csv file.
+
+    Args:
+        file (UploadFile): The input file to process.
+    """
+
+    try:
+        file_path = model_wrapper.predict_from_file_save_as_file(file)
+
+        return FileResponse(file_path)
     except:
         raise HTTPException(
             status_code=500,
