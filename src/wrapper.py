@@ -4,6 +4,7 @@ Wrapper for the XGBoost model.
 import pickle
 import pandas as pd
 from src.dtos import OnePredictionOutputDto, FilePredictionOutputDto
+from src.utils import generate_uuid
 
 FEATURES_TO_ENCODE: list[str] = ['hotel', 'arrival_date_month', 'meal', 'country', 'market_segment',
                                  'distribution_channel', 'is_repeated_guest', 'reserved_room_type',
@@ -184,13 +185,13 @@ class XGBoostModelWrapper:
 
     def predict_from_file(self, file) -> FilePredictionOutputDto:
         """
-        Do the predictions for just one set of features.
+        Do the predictions for a whole file.
 
         Args:
             file (file): The input file of all the features to do the predictions.
 
         Returns:
-            dict: The predictions as a dictionary.
+            FilePredictionOutputDto: The predictions as a dictionary.
         """
 
         try:
@@ -262,3 +263,52 @@ class XGBoostModelWrapper:
         except Exception as e:
             print(e)
             raise ValueError(f"Oops, error while doing the predictions.")
+
+
+    def predict_from_file_save_as_file(self, file):
+        """
+        Do the predictions for just one set of features.
+
+        Args:
+            file (file): The input file of all the features to do the predictions.
+
+        Returns:
+            dict: The predictions as a dictionary.
+        """
+
+        try:
+            # transform from dict to df
+            df = pd.read_csv(file.file)
+
+            # do the predictions
+            predictions, predictions_probas = self.predict(df)
+
+            # get the probabilities for the classes
+            predictions_to_return = list(
+                map(
+                    lambda x, y: {'prediction': x, 'proba_0': y[0], 'proba_1': y[1]},
+                    predictions.tolist(),
+                    predictions_probas.tolist()
+                )
+            )
+
+
+            # add the prediction to the original dataframe
+            df['is_going_to_cancel'] = predictions
+
+            # add the probability predictions to the client info
+            df['prob_cancel'] = list(map(lambda x: x[1], predictions_probas.tolist()))
+            df['prob_not_cancel'] = list(map(lambda x: x[0], predictions_probas.tolist()))
+
+            # path to save the file
+            save_path = f"./files/predictions_{generate_uuid()}.csv"
+
+            # save the file
+            df.to_csv(save_path, index=False)
+
+            return save_path
+
+        except Exception as e:
+            print(e)
+            raise ValueError(f"Oops, error while doing the predictions.")
+
