@@ -4,8 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 
-from src.dtos import FeaturesDto, OnePredictionOutputDto, FilePredictionOutputDto
-from src.wrapper import XGBoostModelWrapper
+from dtos import FeaturesDto, OnePredictionOutputDto, FilePredictionOutputDto
+from wrapper import XGBoostModelWrapper
 
 # load environment variables
 load_dotenv()

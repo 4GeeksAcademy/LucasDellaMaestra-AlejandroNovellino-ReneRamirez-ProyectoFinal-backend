@@ -3,8 +3,8 @@ Wrapper for the XGBoost model.
 """
 import pickle
 import pandas as pd
-from src.dtos import OnePredictionOutputDto, FilePredictionOutputDto
-from src.utils import generate_uuid
+from dtos import OnePredictionOutputDto, FilePredictionOutputDto
+from utils import generate_uuid
 
 FEATURES_TO_ENCODE: list[str] = ['hotel', 'arrival_date_month', 'meal', 'country', 'market_segment',
                                  'distribution_channel', 'is_repeated_guest', 'reserved_room_type',
