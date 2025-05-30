@@ -208,7 +208,7 @@ class XGBoostModelWrapper:
                 ]
 
                 # get the client info
-                client_info_df = df[client_info_columns]
+                client_info_df = df.copy()[client_info_columns]
 
                 # crate the date of the reservation
                 client_info_df['reservation_date'] = pd.to_datetime(
