@@ -4,8 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 
-from src.dtos import FeaturesDto, OnePredictionOutputDto, FilePredictionOutputDto
-from src.wrapper import XGBoostModelWrapper
+from dtos import FeaturesDto, OnePredictionOutputDto, FilePredictionOutputDto
+from wrapper import XGBoostModelWrapper
 
 # load environment variables
 load_dotenv()
@@ -15,7 +15,7 @@ cors_url = os.getenv("CORS_URL")
 try:
     model_wrapper = XGBoostModelWrapper(
         model_path="models/opt_model.pkl",
-        model_encoder_path="models/one_hot_encoder.pkl"
+        model_encoder_path="models/one_hot_encoder.pkl",
     )
 except RuntimeError as e:
 
@@ -56,10 +56,7 @@ async def predict_from_file(file: UploadFile) -> FilePredictionOutputDto:
 
         return result
     except:
-        raise HTTPException(
-            status_code=500,
-            detail="Error doing the prediction."
-        )
+        raise HTTPException(status_code=500, detail="Error doing the prediction.")
 
 
 @app.post("/predict-from-file/get-file")
@@ -76,10 +73,7 @@ async def predict_from_file_return_file(file: UploadFile) -> FileResponse:
 
         return FileResponse(file_path)
     except:
-        raise HTTPException(
-            status_code=500,
-            detail="Error doing the prediction."
-        )
+        raise HTTPException(status_code=500, detail="Error doing the prediction.")
 
 
 @app.post("/predict")
@@ -99,7 +93,4 @@ def predict(features_dto: FeaturesDto) -> OnePredictionOutputDto:
 
         return result
     except:
-        raise HTTPException(
-            status_code=500,
-            detail="Error doing the prediction."
-        )
+        raise HTTPException(status_code=500, detail="Error doing the prediction.")

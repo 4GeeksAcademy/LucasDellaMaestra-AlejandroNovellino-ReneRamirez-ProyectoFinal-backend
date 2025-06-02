@@ -1,14 +1,25 @@
 """
 Wrapper for the XGBoost model.
 """
+
 import pickle
 import pandas as pd
-from src.dtos import OnePredictionOutputDto, FilePredictionOutputDto
-from src.utils import generate_uuid
+from dtos import OnePredictionOutputDto, FilePredictionOutputDto
+from utils import generate_uuid
 
-FEATURES_TO_ENCODE: list[str] = ['hotel', 'arrival_date_month', 'meal', 'country', 'market_segment',
-                                 'distribution_channel', 'is_repeated_guest', 'reserved_room_type',
-                                 'assigned_room_type', 'deposit_type', 'customer_type']
+FEATURES_TO_ENCODE: list[str] = [
+    "hotel",
+    "arrival_date_month",
+    "meal",
+    "country",
+    "market_segment",
+    "distribution_channel",
+    "is_repeated_guest",
+    "reserved_room_type",
+    "assigned_room_type",
+    "deposit_type",
+    "customer_type",
+]
 
 
 class XGBoostModelWrapper:
@@ -35,7 +46,7 @@ class XGBoostModelWrapper:
         """
 
         try:
-            with open(model_path, 'rb') as f:
+            with open(model_path, "rb") as f:
                 model = pickle.load(f)
 
             return model
@@ -59,7 +70,7 @@ class XGBoostModelWrapper:
 
         try:
 
-            with open(model_encoder_path, 'rb') as f:
+            with open(model_encoder_path, "rb") as f:
                 one_hot_encoder = pickle.load(f)
 
                 return one_hot_encoder
@@ -93,15 +104,21 @@ class XGBoostModelWrapper:
             feature_names = one_hot_encoder.get_feature_names_out(FEATURES_TO_ENCODE)
 
             # 3. transform the encoded features to a pandas dataframe
-            encoded_features_df = pd.DataFrame(encoded_features, columns=feature_names, index=df.index)
+            encoded_features_df = pd.DataFrame(
+                encoded_features, columns=feature_names, index=df.index
+            )
 
             # 4. concat the original dataframe with the encoded features
-            df_encoded = pd.concat([df.drop(columns=FEATURES_TO_ENCODE), encoded_features_df], axis=1)
+            df_encoded = pd.concat(
+                [df.drop(columns=FEATURES_TO_ENCODE), encoded_features_df], axis=1
+            )
 
             return df_encoded
 
         except:
-            raise ValueError("Error in preprocessing the input data. Please check the input file.")
+            raise ValueError(
+                "Error in preprocessing the input data. Please check the input file."
+            )
 
     @staticmethod
     def from_dict_to_df(features: dict) -> pd.DataFrame:
@@ -142,7 +159,9 @@ class XGBoostModelWrapper:
         try:
             # 1. preprocessing of the data
             # encode the data using the One-Hot-Encoder
-            df_encoded = self.preprocess_data(df=df, one_hot_encoder=self.one_hot_encoder)
+            df_encoded = self.preprocess_data(
+                df=df, one_hot_encoder=self.one_hot_encoder
+            )
 
             # 2. do the prediction
             pred = self.model.predict(df_encoded)
@@ -175,7 +194,7 @@ class XGBoostModelWrapper:
             output: dict = {
                 "prediction": pred.tolist()[0],
                 "proba_0": pred_proba.tolist()[0][0],
-                "proba_1": pred_proba.tolist()[0][1]
+                "proba_1": pred_proba.tolist()[0][1],
             }
 
             return output
@@ -201,33 +220,40 @@ class XGBoostModelWrapper:
             # verify if the file has the client in the columns
             client_info_df = None
 
-            if 'client' in df.columns:
+            if "client" in df.columns:
                 # info of the cliente to save
                 client_info_columns = [
-                    'client', 'country', 'arrival_date_year', 'arrival_date_month', 'arrival_date_day_of_month'
+                    "client",
+                    "country",
+                    "arrival_date_year",
+                    "arrival_date_month",
+                    "arrival_date_day_of_month",
                 ]
 
                 # get the client info
                 client_info_df = df.copy()[client_info_columns]
 
                 # crate the date of the reservation
-                client_info_df['reservation_date'] = pd.to_datetime(
-                    client_info_df['arrival_date_year'].astype(str) + '-' +
-                    client_info_df['arrival_date_month'] + '-' +
-                    client_info_df['arrival_date_day_of_month'].astype(str)
+                client_info_df["reservation_date"] = pd.to_datetime(
+                    client_info_df["arrival_date_year"].astype(str)
+                    + "-"
+                    + client_info_df["arrival_date_month"]
+                    + "-"
+                    + client_info_df["arrival_date_day_of_month"].astype(str)
                 )
 
                 # drop the columns that are not needed now
                 client_info_df = client_info_df.drop(
-                    ['arrival_date_year', 'arrival_date_month', 'arrival_date_day_of_month'],
-                    axis=1
+                    [
+                        "arrival_date_year",
+                        "arrival_date_month",
+                        "arrival_date_day_of_month",
+                    ],
+                    axis=1,
                 )
 
                 # clean the df
-                df = df.drop(
-                    'client',
-                    axis=1
-                )
+                df = df.drop("client", axis=1)
 
             # do the predictions
             predictions, predictions_probas = self.predict(df)
@@ -235,27 +261,35 @@ class XGBoostModelWrapper:
             # get the probabilities for the classes
             predictions_to_return = list(
                 map(
-                    lambda x, y: {'prediction': x, 'proba_0': y[0], 'proba_1': y[1]},
+                    lambda x, y: {"prediction": x, "proba_0": y[0], "proba_1": y[1]},
                     predictions.tolist(),
-                    predictions_probas.tolist()
+                    predictions_probas.tolist(),
                 )
             )
 
             # if there were clients, add them to the dataframe
             if client_info_df is not None:
                 # add the prediction to the client info
-                client_info_df['is_going_to_cancel'] = predictions
+                client_info_df["is_going_to_cancel"] = predictions
 
                 # add the probability predictions to the client info
-                client_info_df['prob_cancel'] = list(map(lambda x: x[1], predictions_probas.tolist()))
-                client_info_df['prob_not_cancel'] = list(map(lambda x: x[0], predictions_probas.tolist()))
+                client_info_df["prob_cancel"] = list(
+                    map(lambda x: x[1], predictions_probas.tolist())
+                )
+                client_info_df["prob_not_cancel"] = list(
+                    map(lambda x: x[0], predictions_probas.tolist())
+                )
 
             # create the output transform
             output: dict = {
                 "predictions": predictions_to_return,
-                "client_info": client_info_df.to_dict(orient='records') if client_info_df is not None else None,
+                "client_info": (
+                    client_info_df.to_dict(orient="records")
+                    if client_info_df is not None
+                    else None
+                ),
                 "total_predictions": len(predictions),
-                "file_name": file.filename
+                "file_name": file.filename,
             }
 
             return output
@@ -263,7 +297,6 @@ class XGBoostModelWrapper:
         except Exception as e:
             print(e)
             raise ValueError(f"Oops, error while doing the predictions.")
-
 
     def predict_from_file_save_as_file(self, file):
         """
@@ -286,19 +319,20 @@ class XGBoostModelWrapper:
             # get the probabilities for the classes
             predictions_to_return = list(
                 map(
-                    lambda x, y: {'prediction': x, 'proba_0': y[0], 'proba_1': y[1]},
+                    lambda x, y: {"prediction": x, "proba_0": y[0], "proba_1": y[1]},
                     predictions.tolist(),
-                    predictions_probas.tolist()
+                    predictions_probas.tolist(),
                 )
             )
 
-
             # add the prediction to the original dataframe
-            df['is_going_to_cancel'] = predictions
+            df["is_going_to_cancel"] = predictions
 
             # add the probability predictions to the client info
-            df['prob_cancel'] = list(map(lambda x: x[1], predictions_probas.tolist()))
-            df['prob_not_cancel'] = list(map(lambda x: x[0], predictions_probas.tolist()))
+            df["prob_cancel"] = list(map(lambda x: x[1], predictions_probas.tolist()))
+            df["prob_not_cancel"] = list(
+                map(lambda x: x[0], predictions_probas.tolist())
+            )
 
             # path to save the file
             save_path = f"./files/predictions_{generate_uuid()}.csv"
@@ -311,4 +345,3 @@ class XGBoostModelWrapper:
         except Exception as e:
             print(e)
             raise ValueError(f"Oops, error while doing the predictions.")
-
