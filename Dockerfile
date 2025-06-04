@@ -1,18 +1,21 @@
 FROM python:3.11-slim
-# set the working directory
+
+# Establece el directorio de trabajo
 WORKDIR /app
-# copy the requirements file
+
+# Copia e instala dependencias
 COPY requirements.txt .
-# create the virtual environment in the app directory
-ENV VIRTUAL_ENV_PATH=/app/.venv
-RUN python3 -m venv venv
-# set the PATH to include the virtual environment
-ENV PATH="$VIRTUAL_ENV_PATH/bin:$PATH"
-# install the requirements
 RUN pip install --no-cache-dir -r requirements.txt
-# copy the rest of the application code
+
+# Copia el resto del código
 COPY . .
-# expose the uvicorn port
+
+# Expone el puerto donde correrá uvicorn
 EXPOSE 8000
-CMD ["fastapi", "run", "src/main.py"]
-#CMD ["uvicorn", "src/main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# Establecer el PYTHONPATH para que los imports funcionen correctamente
+ENV PYTHONPATH=/app/src
+
+
+# Comando para iniciar el servidor FastAPI con Uvicorn
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--app-dir", "src"]
